@@ -71,7 +71,7 @@ pub fn intcode_op(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         if #args > 0 && self.data.len() < self.ip + 1 + #args {
-            Err(IntcodeError::OutOfBoundsArguments((self.ip + 1 + #args) as i32))
+            Err(IntcodeError::OutOfBoundsArguments((self.ip + 1 + #args) as i64))
         } else {
             #(#assignlist);*;
             let step_result = #op(self, #(#arglist),*)?;
