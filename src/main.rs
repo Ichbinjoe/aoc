@@ -14,6 +14,7 @@ mod y2019p5;
 
 mod y2020p1;
 mod y2020p2;
+mod y2020p3;
 
 #[derive(StructOpt)]
 enum Y2019 {
@@ -28,6 +29,7 @@ enum Y2019 {
 enum Y2020 {
     P1 { input: PathBuf },
     P2 { input: PathBuf },
+    P3 { input: PathBuf },
 }
 
 #[derive(StructOpt)]
@@ -61,6 +63,9 @@ fn run2020(y: &Y2020) -> Result<(), anyhow::Error> {
         }
         Y2020::P2 { input } => {
             y2020p2::y2020p2(&input)?;
+        }
+        Y2020::P3 { input } => {
+            y2020p3::y2020p3(&input)?;
         }
     }
     Ok(())
