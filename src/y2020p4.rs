@@ -16,34 +16,25 @@ struct Passport {
     p: HashMap<String, String>,
 }
 
-fn exists_in_range2(s: Option<String>, a: usize, b: usize) -> bool {
-    s.and_then(|v| v.parse::<usize>().ok())
-        .and_then(|v| Some(v >= a && v <= b))
-        .unwrap_or(false)
-}
-
-fn exists_in_range(s: Option<&String>, a: usize, b: usize) -> bool {
-    s.and_then(|v| v.parse::<usize>().ok())
-        .and_then(|v| Some(v >= a && v <= b))
+fn exists_in_range<T: AsRef<str>>(s: T, a: usize, b: usize) -> bool {
+    s.as_ref()
+        .parse::<usize>()
+        .ok()
+        .map(|v| v >= a && v <= b)
         .unwrap_or(false)
 }
 
 fn height_is(s: Option<&String>) -> bool {
     s.and_then(|v| HEIGHT_RE.captures(v))
-        .and_then(|caps| {
-            let cap1 = caps.get(1).and_then(|a| Some(a.as_str().to_string()));
-            let cap2 = caps.get(2).and_then(|a| Some(a.as_str().to_string()));
-            if cap1 == None || cap2 == None {
-                None
+        .and_then(|caps| caps.get(1).zip(caps.get(2)))
+        .and_then(|(c1, c2)| {
+            let unit = c2.as_str();
+            if unit == "cm" {
+                Some(exists_in_range(c1.as_str(), 150, 193))
+            } else if unit == "in" {
+                Some(exists_in_range(c1.as_str(), 59, 76))
             } else {
-                let unit = cap2.unwrap();
-                if unit == "cm" {
-                    Some(exists_in_range2(cap1, 150, 193))
-                } else if unit == "in" {
-                    Some(exists_in_range2(cap1, 59, 76))
-                } else {
-                    None
-                }
+                None
             }
         })
         .unwrap_or(false)
@@ -59,11 +50,8 @@ mod tests {
 
     #[test]
     fn test_byr() {
-        let a = "2002".to_string();
-        assert!(exists_in_range(Some(&a), 1920, 2002));
-        let b = "2003".to_string();
-        assert!(!exists_in_range(Some(&b), 1920, 2002));
-        assert!(!exists_in_range(None, 1, 12));
+        assert!(exists_in_range("2002", 1920, 2002));
+        assert!(!exists_in_range("2003", 1920, 2002));
     }
 
     #[test]
@@ -107,15 +95,21 @@ mod tests {
 
         assert!(matches_re(Some(&a), &PID_RE));
         assert!(!matches_re(Some(&b), &PID_RE));
-
     }
 }
 
 impl Passport {
+    fn field_must<F>(&self, s: &str, f: F) -> bool
+    where
+        F: FnOnce(&String) -> bool,
+    {
+        self.p.get(s).map(f).unwrap_or(false)
+    }
+
     fn valid(&self) -> bool {
-        exists_in_range(self.p.get("byr"), 1920, 2002)
-            && exists_in_range(self.p.get("iyr"), 2010, 2020)
-            && exists_in_range(self.p.get("eyr"), 2020, 2030)
+        self.field_must("byr", |a| exists_in_range(a, 1920, 2002))
+            && self.field_must("iyr", |a| exists_in_range(a, 2010, 2020))
+            && self.field_must("eyr", |a| exists_in_range(a, 2020, 2030))
             && height_is(self.p.get("hgt"))
             && matches_re(self.p.get("hcl"), &HAIR_RE)
             && matches_re(self.p.get("ecl"), &EYE_RE)
@@ -142,8 +136,7 @@ pub fn y2020p4(input: &PathBuf) -> Result<(), anyhow::Error> {
     for maybe_line in read_lines(input)? {
         let line = maybe_line?;
 
-        if line.trim().len() == 0 {
-            // PASSPORT
+        if line.len() == 0 {
             if passport.valid() {
                 valids += 1;
             }
