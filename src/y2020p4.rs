@@ -12,18 +12,6 @@ lazy_static::lazy_static! {
     static ref PID_RE: regex::Regex = regex::Regex::new("^\\d{9}$").unwrap();
 }
 
-fn passport_valid(m: &HashMap<String, String>) -> bool {
-    m.contains_key("byr")
-        && m.contains_key("iyr")
-        && m.contains_key("eyr")
-        && m.contains_key("hgt")
-        && m.contains_key("hcl")
-        && m.contains_key("ecl")
-        && m.contains_key("pid")
-        && (m.len() == 7 || (m.len() == 8 && m.contains_key("cid")))
-    //m.contains_key("cid")
-}
-
 struct Passport {
     p: HashMap<String, String>,
 }
