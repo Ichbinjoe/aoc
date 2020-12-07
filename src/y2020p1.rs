@@ -1,6 +1,5 @@
-
-use std::path::PathBuf;
 use crate::futil::read_lines;
+use std::path::PathBuf;
 
 pub fn y2020p1(input: &PathBuf) -> Result<(), anyhow::Error> {
     let mut nums = Vec::new();
@@ -18,13 +17,13 @@ pub fn y2020p1(input: &PathBuf) -> Result<(), anyhow::Error> {
             }
         }
     }
-    
+
     for (i, v) in nums.iter().enumerate() {
         for (i2, v2) in nums.iter().skip(i + 1).enumerate() {
             for v3 in nums.iter().skip(i2 + 1) {
                 if v + v2 + v3 == 2020 {
                     println!("b: {} {} {} {}", v, v2, v3, v * v2 * v3);
-                    return Ok(())
+                    return Ok(());
                 }
             }
         }

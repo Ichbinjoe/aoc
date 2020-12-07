@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use anyhow::Context;
 use anyhow::anyhow;
+use anyhow::Context;
 
 use crate::intcode::{IntcodeVM, InterruptReason};
 
@@ -13,23 +13,23 @@ pub fn y2019p5(input: &PathBuf) -> Result<(), anyhow::Error> {
 
     assert_eq!(vm.run()?, InterruptReason::WaitingForInput);
     vm.input(1)?;
-    
+
     loop {
         match vm.run()? {
             InterruptReason::WaitingForOutput => {
                 let output = vm.output()?;
                 println!("Output: {}", output);
-            },
+            }
             InterruptReason::Terminate => {
                 println!("Terminate");
-                break
-            },
+                break;
+            }
             InterruptReason::WaitingForInput => {
                 return Err(anyhow!("Waiting for input with none to give"));
             }
         }
     }
-    
+
     let mut vm2 = IntcodeVM::new(diagnostic_program);
     assert_eq!(vm2.run()?, InterruptReason::WaitingForInput);
     vm2.input(5)?;

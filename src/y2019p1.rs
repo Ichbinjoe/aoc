@@ -9,7 +9,7 @@ fn base_fuel_needed(mass: i32) -> i32 {
 fn total_fuel_needed(mass: i32) -> i32 {
     let mut total = 0;
     let mut unaccounted_for_mass = mass;
-    
+
     loop {
         let new_fuel = base_fuel_needed(unaccounted_for_mass);
         if new_fuel <= 0 {
@@ -22,7 +22,6 @@ fn total_fuel_needed(mass: i32) -> i32 {
 }
 
 pub fn y2019p1(input: &PathBuf) -> Result<(), anyhow::Error> {
-
     let mut base_fuel = 0;
     let mut total_fuel = 0;
 
@@ -47,7 +46,7 @@ mod tests {
         assert_eq!(base_fuel_needed(1969), 654);
         assert_eq!(base_fuel_needed(100756), 33583);
     }
-    
+
     #[test]
     fn total_fuel_needed_test() {
         assert_eq!(total_fuel_needed(1969), 966);

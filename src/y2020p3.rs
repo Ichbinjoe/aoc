@@ -1,6 +1,5 @@
-
-use std::path::PathBuf;
 use crate::futil::read_lines;
+use std::path::PathBuf;
 
 fn tree(s: &str, i: usize, m: usize, l: usize) -> usize {
     let j = (i * m) % l;
@@ -34,5 +33,4 @@ pub fn y2020p3(input: &PathBuf) -> Result<(), anyhow::Error> {
     println!("TREE: {} {}", a, a * b * c * d * e);
 
     Ok(())
-
 }

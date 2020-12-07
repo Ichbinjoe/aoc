@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use std::str::Chars;
 
-
 struct Seat {
     row: usize,
     col: usize,
@@ -70,7 +69,7 @@ impl Seat {
     fn seat_from_instructions(mut i: Chars) -> Result<Seat, anyhow::Error> {
         if let SplitResult::One(rw) = ingest_splits(&mut i, 'F', 'B', 0, 127) {
             if let SplitResult::One(cl) = ingest_splits(&mut i, 'L', 'R', 0, 7) {
-                Ok(Seat{row: rw, col: cl})
+                Ok(Seat { row: rw, col: cl })
             } else {
                 Err(anyhow!("invalid col syntax"))
             }
@@ -84,10 +83,10 @@ impl Seat {
     }
 }
 
-fn find_seat(filled_seats: &[bool;1024]) -> Option<usize> {
+fn find_seat(filled_seats: &[bool; 1024]) -> Option<usize> {
     for i in 1..1023 {
-        if filled_seats[i-1] && !filled_seats[i] && filled_seats[i+1] {
-            return Some(i)
+        if filled_seats[i - 1] && !filled_seats[i] && filled_seats[i + 1] {
+            return Some(i);
         }
     }
     None
@@ -107,7 +106,6 @@ pub fn y2020p5(input: &PathBuf) -> Result<(), anyhow::Error> {
 
         filled_seats[code] = true;
     }
-
 
     let seat = find_seat(&filled_seats);
 

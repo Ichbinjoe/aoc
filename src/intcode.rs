@@ -14,9 +14,7 @@ enum VMState {
 
 const PAGE_ELEMENT_COUNT: usize = std::mem::size_of::<i64>();
 
-struct VMMMU {
-
-}
+struct VMMMU {}
 
 #[derive(Debug)]
 pub struct IntcodeVM<T>
@@ -26,7 +24,7 @@ where
     ip: usize,
     data: T,
     state: VMState,
-    relative_base: i64
+    relative_base: i64,
 }
 
 #[derive(Debug)]
@@ -89,7 +87,10 @@ fn read_index<D: Deref<Target = [i64]>>(data: &D, index: i64) -> Result<i64, Int
     }
 }
 
-fn read_index_mut<D: DerefMut<Target = [i64]>>(data: &mut D, index: i64) -> Result<&mut i64, IntcodeError> {
+fn read_index_mut<D: DerefMut<Target = [i64]>>(
+    data: &mut D,
+    index: i64,
+) -> Result<&mut i64, IntcodeError> {
     if index < 0 {
         return Err(IntcodeError::OutOfBoundsDereference(index));
     }
@@ -98,7 +99,6 @@ fn read_index_mut<D: DerefMut<Target = [i64]>>(data: &mut D, index: i64) -> Resu
         None => Err(IntcodeError::OutOfBoundsDereference(index)),
     }
 }
-
 
 fn intcode_op_add<D: DerefMut<Target = [i64]>>(
     vm: &mut IntcodeVM<D>,
@@ -332,7 +332,7 @@ impl<D: DerefMut<Target = [i64]>> IntcodeVM<D> {
         match arg {
             OpArg::Position(index) => read_index(&self.data, index),
             OpArg::Relative(index) => read_index(&self.data, index + self.relative_base),
-            OpArg::Immediate(value) => Ok(value)
+            OpArg::Immediate(value) => Ok(value),
         }
     }
 
@@ -340,7 +340,7 @@ impl<D: DerefMut<Target = [i64]>> IntcodeVM<D> {
         match arg {
             OpArg::Position(index) => read_index_mut(&mut self.data, index),
             OpArg::Relative(index) => read_index_mut(&mut self.data, index + self.relative_base),
-            OpArg::Immediate(_) => Err(IntcodeError::IllegalStore)
+            OpArg::Immediate(_) => Err(IntcodeError::IllegalStore),
         }
     }
 }

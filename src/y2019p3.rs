@@ -233,7 +233,10 @@ pub fn y2019p3(input: &PathBuf) -> Result<(), anyhow::Error> {
         }
     }
 
-    println!("Closest: {}, Lowest Dist: {}", closest, fewest_combined_steps);
+    println!(
+        "Closest: {}, Lowest Dist: {}",
+        closest, fewest_combined_steps
+    );
 
     Ok(())
 }
@@ -257,7 +260,10 @@ mod tests {
             reverse: true,
         };
 
-        assert_eq!(line_a.intersects(&line_b).unwrap(), (Point { x: 6, y: 5 }, 4));
+        assert_eq!(
+            line_a.intersects(&line_b).unwrap(),
+            (Point { x: 6, y: 5 }, 4)
+        );
     }
 
     #[test]
