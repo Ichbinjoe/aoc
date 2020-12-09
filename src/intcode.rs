@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
+extern crate memmap;
 extern crate proc;
 
 #[derive(Debug, PartialEq)]
@@ -11,10 +12,6 @@ enum VMState {
     WaitingForInput(OpArg),
     WaitingForOutput(OpArg),
 }
-
-const PAGE_ELEMENT_COUNT: usize = std::mem::size_of::<i64>();
-
-struct VMMMU {}
 
 #[derive(Debug)]
 pub struct IntcodeVM<T>
