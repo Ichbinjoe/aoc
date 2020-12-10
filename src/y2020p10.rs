@@ -1,11 +1,8 @@
 use crate::futil::read_lines;
-use anyhow::anyhow;
 use std::path::PathBuf;
 
-use std::collections::HashSet;
-
-fn permute(a: &Vec<u32>) -> usize {
-    match a.len() {
+fn lookup(v: u32) -> usize {
+    match v {
         0 => 1, /* 3, 3*/
         1 => 1, /* 3, 1, 3*/
         2 => 2, /* 3, 1, 1, 3*/
@@ -15,68 +12,34 @@ fn permute(a: &Vec<u32>) -> usize {
     }
 }
 
-fn segment(a: &Vec<u32>) -> Vec<Vec<u32>> {
-    let mut q = vec![];
-    let mut v = vec![];
-    for va in a {
-        if *va < 3 {
-            v.push(*va);
-        } else {
-            q.push(v);
-            v = vec![];
-        }
-    }
-    q
-}
-
 pub fn y2020p10(input: &PathBuf) -> Result<(), anyhow::Error> {
-    let mut a = Vec::new();
+    let mut adapters = Vec::new();
+    adapters.push(0);
 
     for maybe_line in read_lines(input)? {
         let line = maybe_line?;
-        a.push(line.parse::<u32>()?);
+        adapters.push(line.parse::<u32>()?);
     }
 
-    a.push(0);
-    a.sort_unstable();
-    let mut b = vec![];
-    println!("{:?}", a);
-    let mut diff1 = 0;
-    let mut diff3 = 0;
-    let mut last = None;
-    for i in a {
-        if let Some(v) = last {
-            let d = i - v;
-            b.push(d);
-            if d == 1 {
-                diff1 += 1;
-            } else if d == 3 {
-                diff3 += 1;
-            }
-        }
-        last = Some(i);
-    }
-
-    b.push(3);
-
-    println!("{:?}", b);
-    let p = segment(&b);
-    println!("{:?}", p);
+    adapters.sort_unstable();
+    let adapter_jumps = adapters.windows(2).map(|a| a[1] - a[0]);
+    let mut ones = 0;
+    let mut threes = 0;
     let mut q = 1;
-    for f in p {
-        q *= permute(&f);
+    let mut running_ones = 0;
+    for jump in adapter_jumps {
+        if jump == 1 {
+            running_ones += 1;
+            ones += 1;
+        } else {
+            q *= lookup(running_ones);
+            running_ones = 0;
+            threes += 1;
+        }
     }
+    q *= lookup(running_ones);
 
-    println!("{} {} {}", diff1, diff3, diff1 * (diff3 + 1));
-    println!("{}", q);
+    println!("Ones {} Threes {} P1 {} Combs {}", ones, threes, ones * (threes + 1), q);
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test() {
-    }
-}
