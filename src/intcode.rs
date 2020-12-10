@@ -5,15 +5,13 @@ use std::ops::{Deref, DerefMut};
 extern crate memmap;
 extern crate proc;
 
-#[derive(Debug, PartialEq)]
 enum VMState {
     Ready,
     Fault,
-    WaitingForInput(OpArg),
-    WaitingForOutput(OpArg),
+    WaitingForInput(SomeOutOpArg),
+    WaitingForOutput(SomeInOpArg),
 }
 
-#[derive(Debug)]
 pub struct IntcodeVM<T>
 where
     T: DerefMut<Target = [i64]>,
@@ -67,11 +65,152 @@ pub enum StepResult {
     Interrupt(InterruptReason),
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum OpArg {
-    Position(i64),
-    Immediate(i64),
-    Relative(i64),
+#[derive(Clone, Copy)]
+enum SomeInOpArg {
+    Position(PositionInput),
+    Immediate(ImmediateInput),
+    Relative(RelativeInput),
+}
+
+trait InOpArg {
+    fn read<T>(&self, vm: &IntcodeVM<T>) -> Result<i64, IntcodeError>
+    where
+        T: DerefMut<Target = [i64]>;
+    fn to_enum(self) -> SomeInOpArg;
+    /*fn from(i: i64) -> Self; This is just for proc...*/
+}
+
+#[derive(Clone, Copy)]
+struct PositionInput {
+    i: i64,
+}
+
+impl InOpArg for PositionInput {
+    fn read<T>(&self, vm: &IntcodeVM<T>) -> Result<i64, IntcodeError>
+    where
+        T: DerefMut<Target = [i64]>,
+    {
+        read_index(&vm.data, self.i)
+    }
+
+    fn to_enum(self) -> SomeInOpArg {
+        SomeInOpArg::Position(self)
+    }
+}
+
+impl PositionInput {
+    fn from(i: i64) -> Self {
+        Self { i }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct ImmediateInput {
+    i: i64,
+}
+
+impl InOpArg for ImmediateInput {
+    fn read<T>(&self, _: &IntcodeVM<T>) -> Result<i64, IntcodeError>
+    where
+        T: DerefMut<Target = [i64]>,
+    {
+        Ok(self.i)
+    }
+
+    fn to_enum(self) -> SomeInOpArg {
+        SomeInOpArg::Immediate(self)
+    }
+}
+
+impl ImmediateInput {
+    fn from(i: i64) -> Self {
+        Self { i }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct RelativeInput {
+    i: i64,
+}
+
+impl InOpArg for RelativeInput {
+    fn read<T>(&self, vm: &IntcodeVM<T>) -> Result<i64, IntcodeError>
+    where
+        T: DerefMut<Target = [i64]>,
+    {
+        read_index(&vm.data, vm.relative_base + self.i)
+    }
+
+    fn to_enum(self) -> SomeInOpArg {
+        SomeInOpArg::Relative(self)
+    }
+}
+
+impl RelativeInput {
+    fn from(i: i64) -> Self {
+        Self { i }
+    }
+}
+
+#[derive(Clone, Copy)]
+enum SomeOutOpArg {
+    Position(PositionOutput),
+    Relative(RelativeOutput),
+}
+
+trait OutOpArg {
+    fn write<'a, T>(&self, vm: &'a mut IntcodeVM<T>) -> Result<&'a mut i64, IntcodeError>
+    where
+        T: DerefMut<Target = [i64]>;
+    fn to_enum(self) -> SomeOutOpArg;
+    /*fn from(i: i64) -> Self;*/
+}
+
+#[derive(Clone, Copy)]
+struct PositionOutput {
+    i: i64,
+}
+
+impl OutOpArg for PositionOutput {
+    fn write<'a, T>(&self, vm: &'a mut IntcodeVM<T>) -> Result<&'a mut i64, IntcodeError>
+    where
+        T: DerefMut<Target = [i64]>,
+    {
+        read_index_mut(&mut vm.data, self.i)
+    }
+
+    fn to_enum(self) -> SomeOutOpArg {
+        SomeOutOpArg::Position(self)
+    }
+}
+
+impl PositionOutput {
+    fn from(i: i64) -> Self {
+        Self { i }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct RelativeOutput {
+    i: i64,
+}
+
+impl OutOpArg for RelativeOutput {
+    fn write<'a, T>(&self, vm: &'a mut IntcodeVM<T>) -> Result<&'a mut i64, IntcodeError>
+    where
+        T: DerefMut<Target = [i64]>,
+    {
+        read_index_mut(&mut vm.data, vm.relative_base + self.i)
+    }
+
+    fn to_enum(self) -> SomeOutOpArg {
+        SomeOutOpArg::Relative(self)
+    }
+}
+impl RelativeOutput {
+    fn from(i: i64) -> Self {
+        Self { i }
+    }
 }
 
 fn read_index<D: Deref<Target = [i64]>>(data: &D, index: i64) -> Result<i64, IntcodeError> {
@@ -97,68 +236,65 @@ fn read_index_mut<D: DerefMut<Target = [i64]>>(
     }
 }
 
-fn intcode_op_add<D: DerefMut<Target = [i64]>>(
+fn intcode_op_add<D: DerefMut<Target = [i64]>, I1: InOpArg, I2: InOpArg, O: OutOpArg>(
     vm: &mut IntcodeVM<D>,
-    left_idx_1: OpArg,
-    left_idx_2: OpArg,
-    right_idx: OpArg,
+    i1: I1,
+    i2: I2,
+    o: O,
 ) -> Result<StepResult, IntcodeError> {
-    let op_1 = vm.read(left_idx_1)?;
-    let op_2 = vm.read(left_idx_2)?;
+    let op_1 = i1.read(vm)?;
+    let op_2 = i2.read(vm)?;
 
-    *vm.write(right_idx)? = op_1 + op_2;
+    *o.write(vm)? = op_1 + op_2;
 
     Ok(StepResult::Continue)
 }
 
-fn intcode_op_mul<D: DerefMut<Target = [i64]>>(
+fn intcode_op_mul<D: DerefMut<Target = [i64]>, I1: InOpArg, I2: InOpArg, O: OutOpArg>(
     vm: &mut IntcodeVM<D>,
-    left_idx_1: OpArg,
-    left_idx_2: OpArg,
-    right_idx: OpArg,
+    i1: I1,
+    i2: I2,
+    o: O,
 ) -> Result<StepResult, IntcodeError> {
-    let op_1 = vm.read(left_idx_1)?;
-    let op_2 = vm.read(left_idx_2)?;
+    let op_1 = i1.read(vm)?;
+    let op_2 = i2.read(vm)?;
 
-    *vm.write(right_idx)? = op_1 * op_2;
+    *o.write(vm)? = op_1 * op_2;
 
     Ok(StepResult::Continue)
 }
 
-fn intcode_op_input<D: DerefMut<Target = [i64]>>(
+fn intcode_op_input<D: DerefMut<Target = [i64]>, O: OutOpArg>(
     vm: &mut IntcodeVM<D>,
-    store_idx: OpArg,
+    store_idx: O,
 ) -> Result<StepResult, IntcodeError> {
-    // Ensure that the value can be stored to to begin with
-    vm.write(store_idx)?;
-
-    // Set OpArg state so that
-    vm.state = VMState::WaitingForInput(store_idx);
+    vm.state = VMState::WaitingForInput(store_idx.to_enum());
     Ok(StepResult::Interrupt(InterruptReason::WaitingForInput))
 }
 
-fn intcode_op_output<D: DerefMut<Target = [i64]>>(
+fn intcode_op_output<D: DerefMut<Target = [i64]>, I: InOpArg>(
     vm: &mut IntcodeVM<D>,
-    read_idx: OpArg,
+    read_idx: I,
 ) -> Result<StepResult, IntcodeError> {
-    // Ensure that the value can be accessed to to begin with
-    vm.read(read_idx)?;
-
-    // Set VM state so that
-    vm.state = VMState::WaitingForOutput(read_idx);
+    vm.state = VMState::WaitingForOutput(read_idx.to_enum());
     Ok(StepResult::Interrupt(InterruptReason::WaitingForOutput))
 }
 
-fn intcode_op_jump_test<D: DerefMut<Target = [i64]>, F: Fn(i64) -> bool>(
+fn intcode_op_jump_test<
+    D: DerefMut<Target = [i64]>,
+    I1: InOpArg,
+    I2: InOpArg,
+    F: Fn(i64) -> bool,
+>(
     vm: &mut IntcodeVM<D>,
-    val: OpArg,
-    jump: OpArg,
+    val: I1,
+    jump: I2,
     test: F,
 ) -> Result<StepResult, IntcodeError> {
-    let v = vm.read(val)?;
+    let v = val.read(&vm)?;
 
     if test(v) {
-        let new_ip = vm.read(jump)?;
+        let new_ip = jump.read(vm)?;
         if new_ip < 0 {
             return Err(IntcodeError::OutOfBoundsIp(new_ip));
         }
@@ -170,60 +306,66 @@ fn intcode_op_jump_test<D: DerefMut<Target = [i64]>, F: Fn(i64) -> bool>(
     }
 }
 
-fn intcode_op_jump_if_true<D: DerefMut<Target = [i64]>>(
+fn intcode_op_jump_if_true<D: DerefMut<Target = [i64]>, I1: InOpArg, I2: InOpArg>(
     vm: &mut IntcodeVM<D>,
-    test: OpArg,
-    jump: OpArg,
+    test: I1,
+    jump: I2,
 ) -> Result<StepResult, IntcodeError> {
     intcode_op_jump_test(vm, test, jump, |v| v != 0)
 }
 
-fn intcode_op_jump_if_false<D: DerefMut<Target = [i64]>>(
+fn intcode_op_jump_if_false<D: DerefMut<Target = [i64]>, I1: InOpArg, I2: InOpArg>(
     vm: &mut IntcodeVM<D>,
-    test: OpArg,
-    jump: OpArg,
+    test: I1,
+    jump: I2,
 ) -> Result<StepResult, IntcodeError> {
     intcode_op_jump_test(vm, test, jump, |v| v == 0)
 }
 
-fn intcode_op_conditional_store<D: DerefMut<Target = [i64]>, F: Fn(i64, i64) -> bool>(
+fn intcode_op_conditional_store<
+    D: DerefMut<Target = [i64]>,
+    I1: InOpArg,
+    I2: InOpArg,
+    O: OutOpArg,
+    F: Fn(i64, i64) -> bool,
+>(
     vm: &mut IntcodeVM<D>,
-    val_a: OpArg,
-    val_b: OpArg,
-    store: OpArg,
+    val_a: I1,
+    val_b: I2,
+    store: O,
     test: F,
 ) -> Result<StepResult, IntcodeError> {
-    let v_a = vm.read(val_a)?;
-    let v_b = vm.read(val_b)?;
+    let v_a = val_a.read(vm)?;
+    let v_b = val_b.read(vm)?;
 
-    *vm.write(store)? = if test(v_a, v_b) { 1 } else { 0 };
+    *store.write(vm)? = if test(v_a, v_b) { 1 } else { 0 };
 
     Ok(StepResult::Continue)
 }
 
-fn intcode_op_less_than<D: DerefMut<Target = [i64]>>(
+fn intcode_op_less_than<D: DerefMut<Target = [i64]>, I1: InOpArg, I2: InOpArg, O: OutOpArg>(
     vm: &mut IntcodeVM<D>,
-    val_a: OpArg,
-    val_b: OpArg,
-    store: OpArg,
+    val_a: I1,
+    val_b: I2,
+    store: O,
 ) -> Result<StepResult, IntcodeError> {
     intcode_op_conditional_store(vm, val_a, val_b, store, |a, b| a < b)
 }
 
-fn intcode_op_equals<D: DerefMut<Target = [i64]>>(
+fn intcode_op_equals<D: DerefMut<Target = [i64]>, I1: InOpArg, I2: InOpArg, O: OutOpArg>(
     vm: &mut IntcodeVM<D>,
-    val_a: OpArg,
-    val_b: OpArg,
-    store: OpArg,
+    val_a: I1,
+    val_b: I2,
+    store: O,
 ) -> Result<StepResult, IntcodeError> {
     intcode_op_conditional_store(vm, val_a, val_b, store, |a, b| a == b)
 }
 
-fn intcode_op_adjust_relative_base<D: DerefMut<Target = [i64]>>(
+fn intcode_op_adjust_relative_base<D: DerefMut<Target = [i64]>, I: InOpArg>(
     vm: &mut IntcodeVM<D>,
-    adj: OpArg,
+    adj: I,
 ) -> Result<StepResult, IntcodeError> {
-    let adj_amount = vm.read(adj)?;
+    let adj_amount = adj.read(vm)?;
 
     vm.relative_base += adj_amount;
 
@@ -248,7 +390,10 @@ impl<D: DerefMut<Target = [i64]>> IntcodeVM<D> {
 
     pub fn input(&mut self, i: i64) -> Result<(), IntcodeError> {
         if let VMState::WaitingForInput(index) = self.state {
-            *(self.write(index)?) = i;
+            *match index {
+                SomeOutOpArg::Position(p) => p.write(self),
+                SomeOutOpArg::Relative(p) => p.write(self),
+            }? = i;
             self.ip += 2;
             self.state = VMState::Ready;
             Ok(())
@@ -258,8 +403,12 @@ impl<D: DerefMut<Target = [i64]>> IntcodeVM<D> {
     }
 
     pub fn output(&mut self) -> Result<i64, IntcodeError> {
-        if let VMState::WaitingForOutput(index) = self.state {
-            let v = self.read(index)?;
+        if let VMState::WaitingForOutput(index) = &self.state {
+            let v = match index {
+                SomeInOpArg::Position(p) => p.read(self),
+                SomeInOpArg::Immediate(p) => p.read(self),
+                SomeInOpArg::Relative(p) => p.read(self),
+            }?;
             self.ip += 2;
             self.state = VMState::Ready;
             Ok(v)
@@ -268,39 +417,59 @@ impl<D: DerefMut<Target = [i64]>> IntcodeVM<D> {
         }
     }
 
-    pub fn is_ready(&self) -> bool {
-        self.state == VMState::Ready
-    }
-
     pub fn step(&mut self) -> Result<StepResult, IntcodeError> {
         let instruction = match self.data.get(self.ip) {
             Some(instruction) => instruction,
             None => return Err(IntcodeError::OutOfBoundsIp(self.ip as i64)),
         };
 
-        let opcode = instruction % 100;
-        let mut modecode = instruction / 100;
-
-        match opcode {
-            1 => proc::intcode_op!(modecode, intcode_op_add, 3),
-            2 => proc::intcode_op!(modecode, intcode_op_mul, 3),
-            3 => proc::intcode_op!(modecode, intcode_op_input, 1),
-            4 => proc::intcode_op!(modecode, intcode_op_output, 1),
-            5 => proc::intcode_op!(modecode, intcode_op_jump_if_true, 2),
-            6 => proc::intcode_op!(modecode, intcode_op_jump_if_false, 2),
-            7 => proc::intcode_op!(modecode, intcode_op_less_than, 3),
-            8 => proc::intcode_op!(modecode, intcode_op_equals, 3),
-            9 => proc::intcode_op!(modecode, intcode_op_adjust_relative_base, 1),
-            99 => proc::intcode_op!(modecode, intcode_op_terminate, 0),
-            _ => Err(IntcodeError::IllegalOpcode(*instruction)),
-        }
+        proc::intcode_op!(
+            10,
+            instruction,
+            1,
+            intcode_op_add,
+            2,
+            1,
+            2,
+            intcode_op_mul,
+            2,
+            1,
+            3,
+            intcode_op_input,
+            0,
+            1,
+            4,
+            intcode_op_output,
+            1,
+            0,
+            5,
+            intcode_op_jump_if_true,
+            2,
+            0,
+            6,
+            intcode_op_jump_if_false,
+            2,
+            0,
+            7,
+            intcode_op_less_than,
+            2,
+            1,
+            8,
+            intcode_op_equals,
+            2,
+            1,
+            9,
+            intcode_op_adjust_relative_base,
+            1,
+            0,
+            99,
+            intcode_op_terminate,
+            0,
+            0
+        )
     }
 
     pub fn run(&mut self) -> Result<InterruptReason, IntcodeError> {
-        if self.state != VMState::Ready {
-            return Err(IntcodeError::IllegalState);
-        }
-
         loop {
             let step_result = match self.step() {
                 Ok(r) => r,
@@ -323,22 +492,6 @@ impl<D: DerefMut<Target = [i64]>> IntcodeVM<D> {
 
     pub fn data_mut<'a>(&'a mut self) -> &'a mut D {
         return &mut self.data;
-    }
-
-    fn read(&self, arg: OpArg) -> Result<i64, IntcodeError> {
-        match arg {
-            OpArg::Position(index) => read_index(&self.data, index),
-            OpArg::Relative(index) => read_index(&self.data, index + self.relative_base),
-            OpArg::Immediate(value) => Ok(value),
-        }
-    }
-
-    fn write(&mut self, arg: OpArg) -> Result<&mut i64, IntcodeError> {
-        match arg {
-            OpArg::Position(index) => read_index_mut(&mut self.data, index),
-            OpArg::Relative(index) => read_index_mut(&mut self.data, index + self.relative_base),
-            OpArg::Immediate(_) => Err(IntcodeError::IllegalStore),
-        }
     }
 }
 
