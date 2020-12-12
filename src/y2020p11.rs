@@ -172,6 +172,7 @@ pub fn y2020p11(input: &PathBuf) -> Result<(), anyhow::Error> {
             last = next;
         }
     }
+    let mut cnt = 0;
     let mut last2 = m;
     loop {
         let mut next = last2.clone();
@@ -179,11 +180,12 @@ pub fn y2020p11(input: &PathBuf) -> Result<(), anyhow::Error> {
         step2(l as i64, w as i64, &mut c, &last2, &mut next);
 
         println!("{}", c);
+        cnt += 1;
         if last2 == next {
             let old = count(l as i64, w as i64, &last2);
             let new = count(l as i64, w as i64, &next);
 
-            println!("{} {}", old, new);
+            println!("{} {} {}", cnt, old, new);
             break;
         } else {
             last2 = next;
