@@ -1,7 +1,7 @@
 use crate::futil::read_lines;
 use anyhow::anyhow;
-use std::path::PathBuf;
 use std::collections::HashSet;
+use std::path::PathBuf;
 
 pub fn y2020p8(input: &PathBuf) -> Result<(), anyhow::Error> {
     let mut instructions = Vec::new();
@@ -83,7 +83,7 @@ enum Terminate {
     Halt,
 }
 
-impl <'a> VM<'a> {
+impl<'a> VM<'a> {
     fn new(v: &'a Vec<Instruction>) -> VM<'a> {
         VM {
             accum: 0,

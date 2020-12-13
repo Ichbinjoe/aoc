@@ -8,24 +8,24 @@ enum Direction {
     North,
     East,
     South,
-    West
+    West,
 }
 
 impl Direction {
     fn with_rotation(&self, is_right: bool, amount: i32) -> Direction {
         let mut a = amount / 90;
-        if !is_right  {
+        if !is_right {
             a = 4 - a;
         }
 
         let mut d = *self;
-        for i in 0..a {
+        for _ in 0..a {
             // god forgive me
             d = match d {
-                Direction::North => Direction::East, 
-                Direction::East => Direction::South, 
-                Direction::South => Direction::West, 
-                Direction::West => Direction::North, 
+                Direction::North => Direction::East,
+                Direction::East => Direction::South,
+                Direction::South => Direction::West,
+                Direction::West => Direction::North,
             }
         }
         d
@@ -55,11 +55,11 @@ impl Coord {
 
     fn rotate_about_zero(&mut self, is_right: bool, amount: i32) {
         let mut a = amount / 90;
-        if !is_right  {
+        if !is_right {
             a = 4 - a;
         }
 
-        for i in 0..a {
+        for _ in 0..a {
             let x = self.x;
             let y = self.y;
             self.x = -y;
@@ -69,10 +69,13 @@ impl Coord {
 }
 
 pub fn y2020p12(input: &PathBuf) -> Result<(), anyhow::Error> {
-
     let re = Regex::new("(\\w)(\\d+)")?;
 
-    let mut ship = Coord{x: 0, y: 0, orientation: Direction::East};
+    let mut ship = Coord {
+        x: 0,
+        y: 0,
+        orientation: Direction::East,
+    };
 
     for maybe_line in read_lines(input)? {
         let line = maybe_line?;
@@ -81,11 +84,9 @@ pub fn y2020p12(input: &PathBuf) -> Result<(), anyhow::Error> {
 
         let c0 = caps.get(1).unwrap().as_str();
         let c1 = caps.get(2).unwrap().as_str();
-   
-        println!("{} {}", c0, c1);
 
         let a = c1.parse::<i32>()?;
-        match c0{
+        match c0 {
             "N" => ship.apply(Direction::North, a),
             "S" => ship.apply(Direction::South, a),
             "E" => ship.apply(Direction::East, a),
@@ -98,9 +99,17 @@ pub fn y2020p12(input: &PathBuf) -> Result<(), anyhow::Error> {
     }
 
     println!("{} {} {}", ship.x, ship.y, ship.x.abs() + ship.y.abs());
-    
-    let mut ship = Coord{x: 0, y: 0, orientation: Direction::East};
-    let mut waypoint = Coord{x: -10, y: 1, orientation: Direction::East};
+
+    let mut ship = Coord {
+        x: 0,
+        y: 0,
+        orientation: Direction::East,
+    };
+    let mut waypoint = Coord {
+        x: -10,
+        y: 1,
+        orientation: Direction::East,
+    };
 
     for maybe_line in read_lines(input)? {
         let line = maybe_line?;
@@ -109,11 +118,9 @@ pub fn y2020p12(input: &PathBuf) -> Result<(), anyhow::Error> {
 
         let c0 = caps.get(1).unwrap().as_str();
         let c1 = caps.get(2).unwrap().as_str();
-   
-        println!("{} {}", c0, c1);
 
         let a = c1.parse::<i32>()?;
-        match c0{
+        match c0 {
             "N" => waypoint.apply(Direction::North, a),
             "S" => waypoint.apply(Direction::South, a),
             "E" => waypoint.apply(Direction::East, a),
@@ -137,6 +144,5 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test() {
-    }
+    fn test() {}
 }

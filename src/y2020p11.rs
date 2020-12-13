@@ -16,7 +16,11 @@ fn occupied(m: &Vec<Vec<State>>, x: i64, y: i64) -> bool {
     if x < 0 || y < 0 {
         false
     } else {
-        m.get(x as usize).and_then(|a| a.get(y as usize)).map(|s| *s == State::Occupied).or_else(|| Some(false)).unwrap()
+        m.get(x as usize)
+            .and_then(|a| a.get(y as usize))
+            .map(|s| *s == State::Occupied)
+            .or_else(|| Some(false))
+            .unwrap()
     }
 }
 
@@ -28,16 +32,16 @@ fn raytrace(m: &Vec<Vec<State>>, mut x: i64, mut y: i64, d: (i64, i64)) -> bool 
         if x < 0 || y < 0 {
             return false;
         } else {
-           let state = m.get(x as usize).and_then(|a| a.get(y as usize));
-           if let Some(s) = state {
+            let state = m.get(x as usize).and_then(|a| a.get(y as usize));
+            if let Some(s) = state {
                 match s {
                     State::Floor => continue,
                     State::Seat => return false,
                     State::Occupied => return true,
                 }
-           } else {
-               return false;
-           }
+            } else {
+                return false;
+            }
         }
     }
 }
@@ -48,10 +52,10 @@ fn step(x: i64, y: i64, c: &mut i64, old: &Vec<Vec<State>>, new: &mut Vec<Vec<St
             let me = state(old, x, y);
 
             let mut surrounding_occupied = 0;
-            for x1 in x-1..x+2 {
-                for y1 in y-1..y+2 {
+            for x1 in x - 1..x + 2 {
+                for y1 in y - 1..y + 2 {
                     if x1 == x && y1 == y {
-                        continue
+                        continue;
                     }
 
                     if occupied(old, x1, y1) {
@@ -60,7 +64,10 @@ fn step(x: i64, y: i64, c: &mut i64, old: &Vec<Vec<State>>, new: &mut Vec<Vec<St
                 }
             }
 
-            *new.get_mut(x as usize).unwrap().get_mut(y as usize).unwrap() = match me {
+            *new.get_mut(x as usize)
+                .unwrap()
+                .get_mut(y as usize)
+                .unwrap() = match me {
                 State::Seat => {
                     if surrounding_occupied == 0 {
                         *c += 1;
@@ -68,10 +75,8 @@ fn step(x: i64, y: i64, c: &mut i64, old: &Vec<Vec<State>>, new: &mut Vec<Vec<St
                     } else {
                         State::Seat
                     }
-                },
-                State::Floor => {
-                    State::Floor
                 }
+                State::Floor => State::Floor,
                 State::Occupied => {
                     if surrounding_occupied >= 4 {
                         *c += 1;
@@ -81,7 +86,6 @@ fn step(x: i64, y: i64, c: &mut i64, old: &Vec<Vec<State>>, new: &mut Vec<Vec<St
                     }
                 }
             }
-
         }
     }
 }
@@ -92,14 +96,26 @@ fn step2(x: i64, y: i64, c: &mut i64, old: &Vec<Vec<State>>, new: &mut Vec<Vec<S
             let me = state(old, x, y);
 
             let mut surrounding_occupied = 0;
-            let directions = vec![(-1, -1), (-1, 0), (-1, 1), (0, 1), (0, -1), (1, -1), (1, 0), (1, 1)];
+            let directions = vec![
+                (-1, -1),
+                (-1, 0),
+                (-1, 1),
+                (0, 1),
+                (0, -1),
+                (1, -1),
+                (1, 0),
+                (1, 1),
+            ];
             for direction in directions {
                 if raytrace(old, x, y, direction) {
                     surrounding_occupied += 1;
                 }
             }
 
-            *new.get_mut(x as usize).unwrap().get_mut(y as usize).unwrap() = match me {
+            *new.get_mut(x as usize)
+                .unwrap()
+                .get_mut(y as usize)
+                .unwrap() = match me {
                 State::Seat => {
                     if surrounding_occupied == 0 {
                         *c += 1;
@@ -107,10 +123,8 @@ fn step2(x: i64, y: i64, c: &mut i64, old: &Vec<Vec<State>>, new: &mut Vec<Vec<S
                     } else {
                         State::Seat
                     }
-                },
-                State::Floor => {
-                    State::Floor
                 }
+                State::Floor => State::Floor,
                 State::Occupied => {
                     if surrounding_occupied >= 5 {
                         *c += 1;
@@ -120,7 +134,6 @@ fn step2(x: i64, y: i64, c: &mut i64, old: &Vec<Vec<State>>, new: &mut Vec<Vec<S
                     }
                 }
             }
-
         }
     }
 }

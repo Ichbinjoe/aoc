@@ -8,7 +8,7 @@ fn lookup(v: u32) -> usize {
         2 => 2, /* 3, 1, 1, 3*/
         3 => 4, /* 3, 1, 1, 1, 3*/
         4 => 7,
-        _ => panic!("idk")
+        _ => panic!("idk"),
     }
 }
 
@@ -39,7 +39,12 @@ pub fn y2020p10(input: &PathBuf) -> Result<(), anyhow::Error> {
     }
     q *= lookup(running_ones);
 
-    println!("Ones {} Threes {} P1 {} Combs {}", ones, threes, ones * (threes + 1), q);
+    println!(
+        "Ones {} Threes {} P1 {} Combs {}",
+        ones,
+        threes,
+        ones * (threes + 1),
+        q
+    );
     Ok(())
 }
-

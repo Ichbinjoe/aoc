@@ -5,7 +5,7 @@ use std::path::PathBuf;
 struct Cipher {
     c: Vec<usize>,
     window: usize,
-    i: usize
+    i: usize,
 }
 
 impl Cipher {
@@ -24,8 +24,7 @@ impl Cipher {
         return false;
     }
 
-    fn find_v(&mut self) -> Option<usize>{
-
+    fn find_v(&mut self) -> Option<usize> {
         loop {
             if !self.step() {
                 return Some(*self.c.get(self.i).unwrap());
@@ -40,9 +39,9 @@ impl Cipher {
                 s += self.c.get(j).unwrap();
 
                 if s == sum {
-                    return Some((i, j + 1))
+                    return Some((i, j + 1));
                 } else if s > sum {
-                    break
+                    break;
                 }
             }
         }
@@ -74,18 +73,16 @@ pub fn y2020p9(input: &PathBuf) -> Result<(), anyhow::Error> {
         v.push(line.parse::<usize>()?);
     }
 
-    let mut cipher = Cipher{
+    let mut cipher = Cipher {
         c: v,
         window: 25,
         i: 25,
     };
 
-
     let a = cipher.find_v().unwrap();
 
     let (from, to) = cipher.find_range(a).unwrap();
     let (min, max) = cipher.find_minmax(from, to);
-
 
     println!("{} {}", a, min + max);
     Ok(())
@@ -96,6 +93,5 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test() {
-    }
+    fn test() {}
 }

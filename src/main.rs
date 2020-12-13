@@ -12,6 +12,10 @@ mod y2019p3;
 mod y2019p5;
 
 mod y2020p1;
+mod y2020p10;
+mod y2020p11;
+mod y2020p12;
+mod y2020p13;
 mod y2020p2;
 mod y2020p3;
 mod y2020p4;
@@ -20,9 +24,6 @@ mod y2020p6;
 mod y2020p7;
 mod y2020p8;
 mod y2020p9;
-mod y2020p10;
-mod y2020p11;
-mod y2020p12;
 
 #[derive(StructOpt)]
 enum Y2019 {
@@ -47,6 +48,7 @@ enum Y2020 {
     P10 { input: PathBuf },
     P11 { input: PathBuf },
     P12 { input: PathBuf },
+    P13 { input: PathBuf },
 }
 
 #[derive(StructOpt)]
@@ -110,6 +112,9 @@ fn run2020(y: &Y2020) -> Result<(), anyhow::Error> {
         }
         Y2020::P12 { input } => {
             y2020p12::y2020p12(&input)?;
+        }
+        Y2020::P13 { input } => {
+            y2020p13::y2020p13(&input)?;
         }
     }
     Ok(())
