@@ -11,6 +11,19 @@ fn fuck(d: u64, i: &Vec<(usize, u64)>) -> bool {
     return true
 }
 
+fn big_thonk(period: u64, inset: u64, period2: u64, offset: u64) -> (u64, u64) {
+    let new_period = period * period2;
+    for q in 0..period2 {
+        let base = period * q;
+        let v = base + inset;
+        if (v + offset) % period2 == 0 {
+            return (new_period, v)
+        }
+    }
+
+    panic!("OH SHITTTTTTTT");
+}
+
 pub fn y2020p13(input: &PathBuf) -> Result<(), anyhow::Error> {
     
     let mut lines = read_lines(input)?;
@@ -36,19 +49,17 @@ pub fn y2020p13(input: &PathBuf) -> Result<(), anyhow::Error> {
 
     println!("{:?}", busses); 
 
-    // Okay, here is some cheese.
-    //
-    let multiplicatinator = 17671u64;
-    for i in 1..u64::MAX {
-        let v = multiplicatinator * i;
-
-        if i % 100000 == 0{
-            println!("FUCK {}", i);
-        }
-        if fuck(v - 41, &busses) {
-            println!("{}", v);
-        }
+    let mut bus_iter = busses.iter();
+    let (fikds, mut period) = bus_iter.next().unwrap();
+    let mut off = *fikds as u64;
+    for (o2, p2) in bus_iter {
+        let (np, no) = big_thonk(period, off as u64, *p2, *o2 as u64);
+        println!("{} {} DDD", np, no);
+        period = np;
+        off = no;
     }
+
+    println!("{} {}", off, period);
 
     Ok(())
 }
