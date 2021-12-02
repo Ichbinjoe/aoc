@@ -7,10 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.0"
+anyhow = "1.0"
 proc = { path = "proc/" }
-lazy_static = "1.4.0"
-memmap = "0.7.0"
-nom = {version = "6.0.1", features = ["alloc"]}
+lazy_static = "1.4"
 regex = "1.4.2"
 structopt = "0.3"

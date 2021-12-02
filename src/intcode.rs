@@ -2,7 +2,6 @@ use std::error::Error;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
-extern crate memmap;
 extern crate proc;
 
 enum VMState {

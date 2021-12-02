@@ -1,9 +1,9 @@
 extern crate anyhow;
-extern crate nom;
 extern crate structopt;
 
 use std::path::PathBuf;
 use structopt::*;
+mod consume;
 mod futil;
 mod intcode;
 mod y2019p1;
@@ -24,6 +24,9 @@ mod y2020p6;
 mod y2020p7;
 mod y2020p8;
 mod y2020p9;
+
+mod y2021p1;
+mod y2021p2;
 
 #[derive(StructOpt)]
 enum Y2019 {
@@ -52,9 +55,16 @@ enum Y2020 {
 }
 
 #[derive(StructOpt)]
+enum Y2021 {
+    P1 { input: PathBuf },
+    P2 { input: PathBuf },
+}
+
+#[derive(StructOpt)]
 enum Year {
     Y2019(Y2019),
     Y2020(Y2020),
+    Y2021(Y2021),
 }
 
 fn run2019(y: &Y2019) -> Result<(), anyhow::Error> {
@@ -120,11 +130,24 @@ fn run2020(y: &Y2020) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
+fn run2021(y: &Y2021) -> Result<(), anyhow::Error> {
+    match y {
+        Y2021::P1 { input } => {
+            y2021p1::y2021p1(&input)?;
+        }
+        Y2021::P2 { input } => {
+            y2021p2::y2021p2(&input)?;
+        }
+    }
+    Ok(())
+}
+
 fn main() {
     let opt = Year::from_args();
     let r = match opt {
         Year::Y2019(y) => run2019(&y),
         Year::Y2020(y) => run2020(&y),
+        Year::Y2021(y) => run2021(&y),
     };
 
     if let Err(err) = r {
