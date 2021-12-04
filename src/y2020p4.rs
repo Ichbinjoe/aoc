@@ -1,6 +1,5 @@
 extern crate regex;
 use crate::futil::read_lines;
-use anyhow::anyhow;
 use std::path::PathBuf;
 
 use std::collections::HashMap;

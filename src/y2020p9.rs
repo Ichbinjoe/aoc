@@ -1,5 +1,4 @@
 use crate::futil::read_lines;
-use anyhow::anyhow;
 use std::path::PathBuf;
 
 struct Cipher {
@@ -86,12 +85,4 @@ pub fn y2020p9(input: &PathBuf) -> Result<(), anyhow::Error> {
 
     println!("{} {}", a, min + max);
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test() {}
 }

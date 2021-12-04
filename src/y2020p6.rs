@@ -1,5 +1,4 @@
 use crate::futil::read_lines;
-use anyhow::anyhow;
 use std::path::PathBuf;
 
 const DEFAULT_ALL_ANSWERS: u32 = 0x3ffffff;

@@ -43,7 +43,7 @@ impl Command {
             Command::Up(i) => sub.d -= i,
         }
     }
-    
+
     fn apply_to_sub2(&self, sub: &mut SubCoords) {
         match self {
             Command::Forward(i) => {

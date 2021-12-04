@@ -5,36 +5,51 @@ fn fuck(d: u64, i: &Vec<(usize, u64)>) -> bool {
     for (off, fuckfuckfuck) in i {
         let v = d + *off as u64;
         if v % fuckfuckfuck != 0 {
-            return false
+            return false;
         }
     }
-    return true
+    return true;
 }
 
 pub fn y2020p13(input: &PathBuf) -> Result<(), anyhow::Error> {
-    
     let mut lines = read_lines(input)?;
 
     let arrival = lines.next().unwrap()?.parse::<u64>()?;
-    let busses: Vec<u64> = lines.next().unwrap()?.split(",").filter(|x| *x != "x").map(|i| i.parse::<u64>().unwrap()).collect();
+    let busses: Vec<u64> = lines
+        .next()
+        .unwrap()?
+        .split(",")
+        .filter(|x| *x != "x")
+        .map(|i| i.parse::<u64>().unwrap())
+        .collect();
 
-    let mut m: Vec<(u64, u64)> = busses.iter().map(|b| {
-        let depart = b * ((arrival / b) + 1);
-        let diff = depart - arrival;
-        println!("{}", diff);
-        (*b, diff)
-    }).collect();
+    let mut m: Vec<(u64, u64)> = busses
+        .iter()
+        .map(|b| {
+            let depart = b * ((arrival / b) + 1);
+            let diff = depart - arrival;
+            println!("{}", diff);
+            (*b, diff)
+        })
+        .collect();
 
-    m.sort_by(|(b1, diff1), (b2, diff2)| diff1.cmp(diff2));
+    m.sort_by(|(_, diff1), (_, diff2)| diff1.cmp(diff2));
 
     println!("{:?}", m);
-    
+
     let mut lines = read_lines(input)?;
 
     let _ = lines.next().unwrap()?.parse::<u64>()?;
-    let busses: Vec<(usize, u64)> = lines.next().unwrap()?.split(",").enumerate().filter(|(i, x)| *x != "x").map(|(v, i)| (v, i.parse::<u64>().unwrap())).collect();
+    let busses: Vec<(usize, u64)> = lines
+        .next()
+        .unwrap()?
+        .split(",")
+        .enumerate()
+        .filter(|(_, x)| *x != "x")
+        .map(|(v, i)| (v, i.parse::<u64>().unwrap()))
+        .collect();
 
-    println!("{:?}", busses); 
+    println!("{:?}", busses);
 
     // Okay, here is some cheese.
     //
@@ -42,7 +57,7 @@ pub fn y2020p13(input: &PathBuf) -> Result<(), anyhow::Error> {
     for i in 1..u64::MAX {
         let v = multiplicatinator * i;
 
-        if i % 100000 == 0{
+        if i % 100000 == 0 {
             println!("FUCK {}", i);
         }
         if fuck(v - 41, &busses) {
@@ -51,13 +66,4 @@ pub fn y2020p13(input: &PathBuf) -> Result<(), anyhow::Error> {
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test() {
-    }
 }

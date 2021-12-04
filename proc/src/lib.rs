@@ -1,7 +1,6 @@
 extern crate proc_macro;
 extern crate quote;
 
-use itertools::Itertools;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;

@@ -1,13 +1,15 @@
 use crate::futil::read_lines;
-use std::path::PathBuf;
 use anyhow::Result;
+use std::path::PathBuf;
 
 pub fn y2021p1(input: &PathBuf) -> Result<(), anyhow::Error> {
     let nums: Vec<i64> = read_lines(input)?
-        .map(|maybe_line| maybe_line.map_err(anyhow::Error::from).and_then(
-                |l| l.parse::<i64>().map_err(anyhow::Error::from)
-            )
-        ).collect::<Result<Vec<i64>, anyhow::Error>>()?;
+        .map(|maybe_line| {
+            maybe_line
+                .map_err(anyhow::Error::from)
+                .and_then(|l| l.parse::<i64>().map_err(anyhow::Error::from))
+        })
+        .collect::<Result<Vec<i64>, anyhow::Error>>()?;
 
     let mut i = 0;
     let mut depths = nums.iter();
@@ -28,10 +30,8 @@ pub fn y2021p1(input: &PathBuf) -> Result<(), anyhow::Error> {
             j += 1;
         }
         last_depth2 = next_depth2;
-        
     }
     println!("j: {}", j);
 
-
-    return Ok(())
+    return Ok(());
 }

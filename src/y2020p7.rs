@@ -1,9 +1,6 @@
 use crate::futil::read_lines;
-use anyhow::anyhow;
-use lazy_static::lazy_static;
 use std::path::PathBuf;
 
-use regex::Regex;
 use std::collections::HashMap;
 
 #[derive(Eq, Hash, PartialEq)]
